@@ -1,3 +1,5 @@
 venv
 *.xml
 *.iml
+.idea
+P2PServer.log
