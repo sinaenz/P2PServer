@@ -75,4 +75,5 @@ if __name__ == "__main__":
                 logger.info([element for element in ThreadedTCPRequestHandler.openConnections])
                 time.sleep(5)
         except KeyboardInterrupt:
-            server.server_close()
+            server.shutdown()
+        server.shutdown()
