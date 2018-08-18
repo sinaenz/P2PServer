@@ -59,6 +59,7 @@ if __name__ == "__main__":
     HOST, PORT = '0.0.0.0', 8080
 
     server = ThreadedTCPServer((HOST, PORT), ThreadedTCPRequestHandler)
+
     ip, port = server.server_address
 
     # Start a thread with the server -- that thread will then start one
