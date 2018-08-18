@@ -59,20 +59,20 @@ if __name__ == "__main__":
     HOST, PORT = '0.0.0.0', 8080
 
     server = ThreadedTCPServer((HOST, PORT), ThreadedTCPRequestHandler)
-    with server:
-        ip, port = server.server_address
+    ip, port = server.server_address
 
-        # Start a thread with the server -- that thread will then start one
-        # more thread for each request
-        server_thread = threading.Thread(target=server.serve_forever, name='ServerThread')
+    # Start a thread with the server -- that thread will then start one
+    # more thread for each request
+    server_thread = threading.Thread(target=server.serve_forever, name='ServerThread')
 
-        # Exit the server thread when the main thread terminates
-        server_thread.daemon = True
-        server_thread.start()
-        logger.info("Server running in thread: {}".format(server_thread.name))
-        try:
-            while True:
-                logger.info([element for element in ThreadedTCPRequestHandler.openConnections])
-                time.sleep(5)
-        except KeyboardInterrupt:
-            server.server_close()
+    # Exit the server thread when the main thread terminates
+    server_thread.daemon = True
+    server_thread.start()
+    logger.info("Server running in thread: {}".format(server_thread.name))
+    try:
+        while True:
+            logger.info([element for element in ThreadedTCPRequestHandler.openConnections])
+            time.sleep(5)
+    except KeyboardInterrupt:
+        server.shutdown()
+
