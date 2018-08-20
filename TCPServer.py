@@ -32,8 +32,8 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             self.openConnections[name] = self.request
 
             while True:
+                self.request.settimeout(120)
                 data = str(self.request.recv(1024), 'ascii').strip()
-                print(data)
                 # if connection closed by a peer
                 if not data:
                     del self.openConnections[name]
@@ -61,7 +61,6 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
 if __name__ == "__main__":
 
-    logger = logging.getLogger('TCP Log')
     # Port 0 means to select an arbitrary unused port
     HOST, PORT = '0.0.0.0', 8080
 
