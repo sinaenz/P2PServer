@@ -2,15 +2,17 @@ import socket
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-print(sock)
+sock.connect(('127.0.0.1', 8080))
 
-sock.connect(('0.0.0.0', 8080))
-
-sock.sendall(b'GilsaGatewaysalam')
+sock.sendall(b'GilsaGateway,gateway_no_3')
 
 print(sock.recv(1024))
 
-while True:
-    data = str(sock.recv(1024), 'ascii').strip()
-    print(data)
-    sock.send(b'Delivered!')
+try:
+    while True:
+        data = str(sock.recv(1024), 'ascii').strip()
+        print(data)
+        sock.send(b'Delivered!')
+
+except KeyboardInterrupt:
+    sock.close()

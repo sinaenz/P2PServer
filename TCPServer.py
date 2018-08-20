@@ -28,13 +28,15 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             cur_thread.setName(name)
             self.request.sendall(bytes('OK,{}'.format(name), 'ascii'))
             self.openConnections[name] = self.request
-            try:
-                while True:
-                    pass
-            except ConnectionError:
-                del self.openConnections[name]
-                logger.info('Thread {} killed!'.format(cur_thread.name))
-                return
+
+            while True:
+                data = str(self.request.recv(1024), 'ascii').strip()
+                print(data)
+                # if connection closed by a peer
+                if not data:
+                    del self.openConnections[name]
+                    logger.info('Thread {} killed!'.format(cur_thread.name))
+                    return
 
         # if request is from a mobile device (if its a command)
         elif data.startswith('GilsaMobile'):
