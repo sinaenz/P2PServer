@@ -1,0 +1,4 @@
+Django==2.1
+django-jalali==3.0.3
+jdatetime==3.0.0
+pytz==2018.5

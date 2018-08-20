@@ -2,10 +2,12 @@ import threading
 import socketserver
 import logging
 import time
+import jdatetime
 
 
 # Config Logger
-logging.basicConfig(filename='P2PServer.log', level=logging.DEBUG, format='%(asctime)s %(message)s')
+logging.basicConfig(filename='P2PServer.log', level=logging.DEBUG, format='%(message)s')
+logging.Formatter.converter = jdatetime.datetime.now
 logger = logging.getLogger()
 
 
@@ -35,7 +37,10 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 # if connection closed by a peer
                 if not data:
                     del self.openConnections[name]
-                    logger.info('Thread {} killed!'.format(cur_thread.name))
+                    logger.info('{} - Thread {} killed!'.format(
+                        jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
+                        cur_thread.name)
+                    )
                     return
 
         # if request is from a mobile device (if its a command)
@@ -71,11 +76,17 @@ if __name__ == "__main__":
     # Exit the server thread when the main thread terminates
     server_thread.daemon = True
     server_thread.start()
-    logger.info("Server running in thread: {}".format(server_thread.name))
+    logger.info("{} - Server running in thread: {}".format(
+        jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
+        server_thread.name)
+    )
     try:
         while True:
-            logger.info([element for element in ThreadedTCPRequestHandler.openConnections])
-            time.sleep(5)
+            logger.info('{} - {}'.format(
+                jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
+                [element for element in ThreadedTCPRequestHandler.openConnections])
+            )
+            time.sleep(60)
     except KeyboardInterrupt:
         server.shutdown()
 
