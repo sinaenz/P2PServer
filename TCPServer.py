@@ -33,7 +33,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             while True:
                 # Set connection timeout here!
                 # (max acceptable time without receiving packets)
-                self.request.settimeout(120)
+                self.request.settimeout(20)
                 try:
                     data = str(self.request.recv(1024), 'ascii').strip()
                     # if connection closed by a peer
@@ -45,11 +45,12 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                         )
                         return
                 # if timeout occurred
-                except:
+                except Exception as error:
                     del self.openConnections[name]
-                    logger.info('{} - Thread {} is time out!'.format(
+                    logger.info('{} - Thread {} {}'.format(
                         jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
-                        cur_thread.name)
+                        cur_thread.name,
+                        error)
                     )
                     return
         # if request is from a mobile device (if its a command)
@@ -96,7 +97,10 @@ if __name__ == "__main__":
                 jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
                 [element for element in ThreadedTCPRequestHandler.openConnections])
             )
-            time.sleep(60)
+            # print('{} - {}'.format(
+            #     jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
+            #     [element for element in ThreadedTCPRequestHandler.openConnections]))
+            time.sleep(5)
     except KeyboardInterrupt:
         server.shutdown()
 
