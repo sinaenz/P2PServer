@@ -33,26 +33,17 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             while True:
                 # Set connection timeout here!
                 # (max acceptable time without receiving packets)
-                self.request.settimeout(20)
-                try:
-                    data = str(self.request.recv(1024), 'ascii').strip()
-                    # if connection closed by a peer
-                    if not data:
-                        del self.openConnections[name]
-                        logger.info('{} - Thread {} killed by peer!'.format(
-                            jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
-                            cur_thread.name)
-                        )
-                        return
-                # if timeout occurred
-                except Exception as error:
+                self.request.settimeout(40)
+                data = str(self.request.recv(1024), 'ascii').strip()
+                # if connection closed by a peer
+                if not data:
                     del self.openConnections[name]
-                    logger.info('{} - Thread {} {}'.format(
+                    logger.info('{} - Thread {} killed by peer!'.format(
                         jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
-                        cur_thread.name,
-                        error)
+                        cur_thread.name)
                     )
                     return
+
         # if request is from a mobile device (if its a command)
         elif data.startswith('GilsaMobile'):
             name, command = data.split(',')[1], data.split(',')[2]
