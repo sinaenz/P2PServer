@@ -33,34 +33,55 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             while True:
                 # Set connection timeout here!
                 # (max acceptable time without receiving packets)
-                self.request.settimeout(40)
-                data = str(self.request.recv(1024), 'ascii').strip()
-                # if connection closed by a peer
-                if not data:
+                self.request.settimeout(100)
+                try:
+                    data = str(self.request.recv(1024), 'ascii').strip()
+                    # if connection closed by a peer
+                    if not data:
+                        del self.openConnections[name]
+                        logger.info('{} - Thread {} killed by peer!'.format(
+                            jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
+                            cur_thread.name,)
+                        )
+                        return
+                # if timeout occurred
+                except Exception as error:
                     del self.openConnections[name]
-                    logger.info('{} - Thread {} killed by peer!'.format(
+                    logger.info('{} - Thread {} {}'.format(
                         jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
-                        cur_thread.name)
+                        cur_thread.name,
+                        error)
                     )
                     return
-
         # if request is from a mobile device (if its a command)
         elif data.startswith('GilsaMobile'):
             name, command = data.split(',')[1], data.split(',')[2]
+            logger.info('{} - Request for access to {}'.format(
+                jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
+                name)
+            )
             connection = self.openConnections[name]
             connection.sendall(bytes(command, 'ascii'))
+            logger.info('{} - Command sent to {}'.format(
+                jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
+                name)
+            )
             response = connection.recv(1024)
+            logger.info('{} - Response received from {}'.format(
+                jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
+                name)
+            )
             self.request.sendall(response)
+            logger.info('{} - Response sent back !'.format(
+                jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'))
+            )
 
         else:
             return
 
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
-
-    daemon_threads = True
-    allow_reuse_address = True
-
+    pass
 
 if __name__ == "__main__":
 
@@ -68,6 +89,8 @@ if __name__ == "__main__":
     HOST, PORT = '0.0.0.0', 8080
 
     server = ThreadedTCPServer((HOST, PORT), ThreadedTCPRequestHandler)
+
+    server.allow_reuse_address = True
 
     ip, port = server.server_address
 
@@ -88,10 +111,10 @@ if __name__ == "__main__":
                 jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
                 [element for element in ThreadedTCPRequestHandler.openConnections])
             )
-            # print('{} - {}'.format(
-            #     jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
-            #     [element for element in ThreadedTCPRequestHandler.openConnections]))
+            print('{} - {}'.format(
+                jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
+                [element for element in ThreadedTCPRequestHandler.openConnections]))
             time.sleep(5)
-    except KeyboardInterrupt:
+    except :
         server.shutdown()
 
