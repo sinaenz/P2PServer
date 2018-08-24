@@ -6,6 +6,7 @@ import jdatetime
 
 
 # Config Logger
+# TODO: Config more files for logging
 logging.basicConfig(filename='P2PServer.log', level=logging.DEBUG, format='%(message)s')
 logging.Formatter.converter = jdatetime.datetime.now
 logger = logging.getLogger()
@@ -14,70 +15,77 @@ logger = logging.getLogger()
 # is created for each connection
 class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
-    openConnections = {}
+    # {'GatewayID': GateWaySocket, ...}
+    openGatewayQueue = {}
+    #
+    openMobileQueue = {}
 
     def handle(self):
         data = str(self.request.recv(1024), 'ascii')
+
         # if request is from a gateway (if its just a packet to keep the session alive)
-        if data.startswith('GilsaGateway'):
+        if data.startswith('GG'):
+
             # find gateway name
             name = data.split(',')[1]
+
             # check if gateway has a live connection
-            if name in [thread.name for thread in threading.enumerate()]:
-                return
+            try:
+                del self.openGatewayQueue[name]
+            except:
+                pass
+
             # set current thread name and save the connection
             cur_thread = threading.current_thread()
             cur_thread.setName(name)
             self.request.sendall(bytes('OK,{}'.format(name), 'ascii'))
-            self.openConnections[name] = self.request
+            self.openGatewayQueue[name] = self.request
+
+            # keep thread alive!
             while True:
+
                 # Set connection timeout here!
                 # (max acceptable time without receiving packets)
                 self.request.settimeout(100)
+
                 try:
                     data = str(self.request.recv(1024), 'ascii').strip()
-                    # if connection closed by a peer
+
                     if not data:
-                        del self.openConnections[name]
+                        del self.openGatewayQueue[name]
                         logger.info('{} - Thread {} killed by peer!'.format(
                             jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
-                            cur_thread.name,)
+                            cur_thread.name, )
                         )
                         return
+
+                    mobile, response = data.split(',')[:2]
+                    mobile = self.openMobileQueue[mobile]
+                    mobile.sendall(bytes(response, 'ascii'))
+
                 # if timeout occurred
                 except Exception as error:
-                    del self.openConnections[name]
+                    del self.openGatewayQueue[name]
                     logger.info('{} - Thread {} {}'.format(
                         jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
                         cur_thread.name,
                         error)
                     )
                     return
-        # if request is from a mobile device (if its a command)
-        elif data.startswith('GilsaMobile'):
-            name, command = data.split(',')[1], data.split(',')[2]
-            logger.info('{} - Request for access to {}'.format(
-                jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
-                name)
-            )
-            connection = self.openConnections[name]
-            connection.sendall(bytes(command, 'ascii'))
-            logger.info('{} - Command sent to {}'.format(
-                jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
-                name)
-            )
-            response = connection.recv(1024)
-            logger.info('{} - Response received from {}'.format(
-                jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
-                name)
-            )
-            self.request.sendall(response)
-            logger.info('{} - Response sent back !'.format(
-                jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'))
-            )
+                    # if connection closed by a peer
 
-        else:
-            return
+        # if request is from a mobile device (if its a command)
+        # GM,GatewayID,MobileID,Command
+        elif data.startswith('GM'):
+
+            gateway, mobile, command = data.split(',')[1:4]
+            self.openMobileQueue[mobile] = self.request
+
+            gateway = self.openGatewayQueue[gateway]
+            gateway.sendall(bytes(','.join([mobile, command]), 'ascii'))
+
+            response = self.request.recv(1024)
+            self.request.sendall(response)
 
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
@@ -109,11 +117,16 @@ if __name__ == "__main__":
         while True:
             logger.info('{} - {}'.format(
                 jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
-                [element for element in ThreadedTCPRequestHandler.openConnections])
+                [element for element in ThreadedTCPRequestHandler.openGatewayQueue])
             )
-            print('{} - {}'.format(
+            logger.info('{} - {}'.format(
                 jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
-                [element for element in ThreadedTCPRequestHandler.openConnections]))
+                [element for element in ThreadedTCPRequestHandler.openMobileQueue]))
+
+            # print('{} - {}'.format(
+            #     jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
+            #     [element for element in ThreadedTCPRequestHandler.openGatewayQueue]))
+
             time.sleep(5)
     except :
         server.shutdown()
