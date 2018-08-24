@@ -4,7 +4,7 @@ A TCP based P2P server
 
 --- register as a gateway ---
 
-send    b'GG,gateway-id'    to   gilsatech.com:8080
+send >>>>> b'GG,gateway-id'    to   gilsatech.com:8080
 
 --- connect as a mobile (send commands to gateway) ---
 
