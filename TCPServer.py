@@ -78,7 +78,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         # GM,GatewayID,MobileID,Command
         elif data.startswith('GM'):
 
-            gateway, mobile, command = data.split(',')[1:4]
+            gateway, mobile, command = [x.rstrip() for x in data.split(',')[1:4]]
             self.openMobileQueue[mobile] = self.request
 
             gateway = self.openGatewayQueue[gateway]
