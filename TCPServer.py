@@ -87,6 +87,8 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             response = self.request.recv(1024)
             self.request.sendall(response)
 
+            del self.openMobileQueue[mobile]
+
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     pass
