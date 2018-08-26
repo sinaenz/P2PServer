@@ -27,7 +27,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         if data.startswith('GG'):
 
             # find gateway name
-            name = data.split(',')[1]
+            name = data.split(',')[1].rstrip()
 
             # check if gateway has a live connection
             try:
