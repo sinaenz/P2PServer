@@ -10,10 +10,10 @@ sock.listen(10)
 while True:
     current_connection, address = sock.accept()
     while True:
-        data = str(current_connection.recv(2048)).rstrip()
+        data = str(current_connection.recv(2048), 'ascii').rstrip()
         print(data)
 
-        if data == 'quit':
+        if data == 'quit' or not data:
             current_connection.shutdown(1)
             current_connection.close()
             break
