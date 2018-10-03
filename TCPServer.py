@@ -49,20 +49,19 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 # self.request.settimeout(100)
 
                 try:
-                    data = self.request.recv(1024)
-                    self.request.sendall(data)
+                    data = str(self.request.recv(1024), 'ascii').strip()
 
-                    # if not data:
-                    #     del self.openGatewayQueue[name]
-                    #     logger.info('{} - Thread {} killed by peer!'.format(
-                    #         jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
-                    #         cur_thread.name, )
-                    #     )
-                    #     return
-                    #
-                    # mobile, response = data.split(',')[:2]
-                    # mobile = self.openMobileQueue[mobile]
-                    # mobile.sendall(bytes(response, 'ascii'))
+                    if not data:
+                        del self.openGatewayQueue[name]
+                        logger.info('{} - Thread {} killed by peer!'.format(
+                            jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
+                            cur_thread.name, )
+                        )
+                        return
+
+                    mobile, response = data.split(',')[:2]
+                    mobile = self.openMobileQueue[mobile]
+                    mobile.sendall(bytes(response, 'ascii'))
 
                 # if timeout occurred
                 except Exception as error:
@@ -77,18 +76,18 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
         # if request is from a mobile device (if its a command)
         # GM,GatewayID,MobileID,Command
-        # elif data.startswith('GM'):
-        #
-        #     gateway, mobile, command = [x.rstrip() for x in data.split(',')[1:4]]
-        #     self.openMobileQueue[mobile] = self.request
-        #
-        #     gateway = self.openGatewayQueue[gateway]
-        #     gateway.sendall(bytes(','.join([mobile, command]), 'ascii'))
-        #
-        #     response = self.request.recv(1024)
-        #     self.request.sendall(response)
-        #
-        #     del self.openMobileQueue[mobile]
+        elif data.startswith('GM'):
+
+            gateway, mobile, command = [x.rstrip() for x in data.split(',')[1:4]]
+            self.openMobileQueue[mobile] = self.request
+
+            gateway = self.openGatewayQueue[gateway]
+            gateway.sendall(bytes(','.join([mobile, command]), 'ascii'))
+
+            response = self.request.recv(1024)
+            self.request.sendall(response)
+
+            del self.openMobileQueue[mobile]
 
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
@@ -100,8 +99,6 @@ if __name__ == "__main__":
     HOST, PORT = '0.0.0.0', 8080
 
     server = ThreadedTCPServer((HOST, PORT), ThreadedTCPRequestHandler)
-
-    server.timeout = 100
 
     server.allow_reuse_address = True
 
