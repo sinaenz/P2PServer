@@ -1,5 +1,6 @@
 import socket
 import threading
+import time
 
 
 def make_a_gateway(s):
@@ -7,9 +8,9 @@ def make_a_gateway(s):
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, True)
+        socket.TCP_KEEPINTVL=1
 
-        socket.timeout = 100
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, True)
 
         sock.connect(('p2p.gilsatech.com', 8080))
 
@@ -24,9 +25,9 @@ def make_a_gateway(s):
             if not data:
                 print('Connection closed among process!')
                 break
-            print(data)
-            sock.sendall(bytes(data, 'ascii'))
-            print(sock)
+            time.sleep(10)
+            sock.sendall(b'Salaaaaam')
+
 
         print('connection closed!')
         sock.close()

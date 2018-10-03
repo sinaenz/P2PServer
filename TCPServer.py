@@ -49,8 +49,9 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                 # self.request.settimeout(100)
 
                 try:
-                    data = str(self.request.recv(1024), 'ascii').strip()
-                    print(data)
+                    data = self.request.recv(1024)
+                    self.request.sendall(data)
+
                     # if not data:
                     #     del self.openGatewayQueue[name]
                     #     logger.info('{} - Thread {} killed by peer!'.format(
