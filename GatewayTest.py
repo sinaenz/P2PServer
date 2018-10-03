@@ -27,7 +27,7 @@ def make_a_gateway(s):
         print('connection closed!')
         sock.close()
 
-for i in range(5):
+for i in range(1):
 
     th = threading.Thread(target=make_a_gateway, args=(i,), name='Thread number %s' % i)
     th.start()

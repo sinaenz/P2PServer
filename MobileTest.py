@@ -8,4 +8,3 @@ while True:
         sock.sendall(bytes('GM,g3,m3,' + message, 'ascii'))
         print(sock.recv(1024))
         sock.close()
-

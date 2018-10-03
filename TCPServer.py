@@ -121,15 +121,15 @@ if __name__ == "__main__":
                 jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
                 [element for element in ThreadedTCPRequestHandler.openGatewayQueue])
             )
-            logger.info('{} - {}'.format(
-                jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
-                [element for element in ThreadedTCPRequestHandler.openMobileQueue]))
+            # logger.info('{} - {}'.format(
+            #     jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
+            #     [element for element in ThreadedTCPRequestHandler.openMobileQueue]))
 
             # print('{} - {}'.format(
             #     jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
             #     [element for element in ThreadedTCPRequestHandler.openGatewayQueue]))
 
-            time.sleep(5)
+            time.sleep(2)
     except :
         server.shutdown()
 
