@@ -100,6 +100,8 @@ if __name__ == "__main__":
 
     server = ThreadedTCPServer((HOST, PORT), ThreadedTCPRequestHandler)
 
+    server.timeout = 100
+
     server.allow_reuse_address = True
 
     ip, port = server.server_address

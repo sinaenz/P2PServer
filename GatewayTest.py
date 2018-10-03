@@ -7,6 +7,10 @@ def make_a_gateway(s):
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, True)
+
+        socket.timeout = 100
+
         sock.connect(('p2p.gilsatech.com', 8080))
 
         sock.sendall(bytes('GG,g%s' % s, 'ascii'))
