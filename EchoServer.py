@@ -11,6 +11,7 @@ while True:
     current_connection, address = sock.accept()
     while True:
         data = str(current_connection.recv(2048), 'ascii').rstrip()
+        print(data)
 
         if data == 'quit':
             current_connection.shutdown(1)
@@ -24,4 +25,3 @@ while True:
 
         elif data:
             current_connection.send(bytes(data, 'ascii'))
-            print(data)
