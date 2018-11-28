@@ -4,15 +4,14 @@ import time
 
 
 def make_a_gateway(s):
+
     while True:
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, True)
+        sock.connect(('127.0.0.1', 8888))
 
-        sock.connect(('p2p.gilsatech.com', 8080))
-
-        sock.sendall(bytes('GG,g%s' % s, 'ascii'))
+        sock.sendall(bytes('gdevice,%s' % s, 'ascii'))
 
         print(sock.recv(1024))
 
@@ -24,13 +23,12 @@ def make_a_gateway(s):
             if not data:
                 print('Connection closed among process!')
                 break
-            time.sleep(1)
-            sock.sendall(b'GM,g4,m3,Salaaaaam')
+            sock.sendall(bytes(data, 'ascii'))
 
         print('connection closed!')
         sock.close()
 
-for i in range(1):
+for i in [10]:
 
     th = threading.Thread(target=make_a_gateway, args=(i,), name='Thread number %s' % i)
     th.start()

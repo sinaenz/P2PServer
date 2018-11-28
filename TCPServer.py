@@ -3,6 +3,7 @@ import socketserver
 import logging
 import time
 import jdatetime
+import requests
 
 
 # Config Logger
@@ -15,19 +16,29 @@ logger = logging.getLogger()
 # is created for each connection
 class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
-    # {'GatewayID': GateWaySocket, ...}
+    # {'GatewayID': GatewaySocket, ...}
     openGatewayQueue = {}
     #
     openMobileQueue = {}
 
     def handle(self):
+        # data {'devID': , 'macID': , }
         data = str(self.request.recv(1024), 'ascii')
 
         # if request is from a gateway (if its just a packet to keep the session alive)
-        if data.startswith('GG'):
+        if data.startswith('gdevice'):
 
-            # find gateway name
+            # find gateway name (id)
             name = data.split(',')[1].rstrip()
+            # check if device is registered
+            resp = requests.get('http://127.0.0.1:8000/api/v1.0/mobile/validate-d/{}/'.format(name))
+            if resp.json()['status'] != 'OK':
+                logger.info('{} - Device with id {} is not registered!'.format(
+                    jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
+                    name,)
+                )
+                self.request.sendall(b'Fail!')
+                self.request.close()
 
             # check if gateway has a live connection
             try:
@@ -53,6 +64,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
                     if not data:
                         del self.openGatewayQueue[name]
+                        print('deleted !')
                         logger.info('{} - Thread {} killed by peer!'.format(
                             jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
                             cur_thread.name, )
@@ -65,6 +77,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
                 # if timeout occurred
                 except Exception as error:
+                    print('deleted !')
                     del self.openGatewayQueue[name]
                     logger.info('{} - Thread {} {}'.format(
                         jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
@@ -75,18 +88,17 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
                     # if connection closed by a peer
 
         # if request is from a mobile device (if its a command)
-        # GM,GatewayID,MobileID,Command
-        elif data.startswith('GM'):
-
-            gateway, mobile, command = [x.rstrip() for x in data.split(',')[1:4]]
+        # gmobile, mobileID, deviceID, command
+        elif data.startswith('gmobile'):
+            print([x.rstrip() for x in data.split(';')[1:]])
+            mobile, gateway, command = [x.rstrip() for x in data.split(';')[1:]]
+            print(mobile, gateway, command)
             self.openMobileQueue[mobile] = self.request
-
             gateway = self.openGatewayQueue[gateway]
-            gateway.sendall(bytes(','.join([mobile, command]), 'ascii'))
+            gateway.sendall(bytes(command, 'ascii'))
 
             response = self.request.recv(1024)
             self.request.sendall(response)
-
             del self.openMobileQueue[mobile]
 
 
@@ -96,7 +108,7 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 if __name__ == "__main__":
 
     # Port 0 means to select an arbitrary unused port
-    HOST, PORT = '0.0.0.0', 8080
+    HOST, PORT = '0.0.0.0', 8888
 
     server = ThreadedTCPServer((HOST, PORT), ThreadedTCPRequestHandler)
 
@@ -117,17 +129,17 @@ if __name__ == "__main__":
     )
     try:
         while True:
-            logger.info('{} - {}'.format(
-                jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
-                [element for element in ThreadedTCPRequestHandler.openGatewayQueue])
-            )
             # logger.info('{} - {}'.format(
             #     jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
-            #     [element for element in ThreadedTCPRequestHandler.openMobileQueue]))
+            #     [element for element in ThreadedTCPRequestHandler.openGatewayQueue])
+            # )
+            print('{} - {}'.format(
+                jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
+                [element for element in ThreadedTCPRequestHandler.openMobileQueue]))
 
-            # print('{} - {}'.format(
-            #     jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
-            #     [element for element in ThreadedTCPRequestHandler.openGatewayQueue]))
+            print('{} - {}'.format(
+                jdatetime.datetime.now().strftime('%d %B %Y %H:%M:%S'),
+                [element for element in ThreadedTCPRequestHandler.openGatewayQueue]))
 
             time.sleep(2)
     except :
