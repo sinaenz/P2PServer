@@ -1,6 +1,6 @@
 certifi==2018.10.15
 chardet==3.0.4
-Django==2.1
+Django==2.2.10
 django-jalali==3.0.3
 idna==2.7
 jdatetime==3.0.0
